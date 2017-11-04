@@ -1,0 +1,176 @@
+# dirstack for busybox
+#
+#	author:   td.wong@tp-link.com
+#	created:  2017-10-31
+#	revision:
+#			2017-10-31	initial working version
+#			2017-11-03	github version
+#
+
+zdirs() {
+	# zdirs -c : clear directory stack
+	[ $# -ne 0 -a "X$1" = "X-c" ] && DIRSTACK= && return
+	[ $# -ne 0 -a "X$1" = "X-p" ] && echo DIRSTACK=$DIRSTACK && return
+	# zdirs : show directory stack
+		#-dbg- echo DIRSTACK=$DIRSTACK
+	echo ' 0 ' $(pwd | sed -e "s|$HOME|~|")
+		# does $HOME substitution
+	echo ${DIRSTACK} | awk -F':' '{for(ix=1;ix<=NF;ix++){if($ix!=""){gsub("'$HOME'","~",$ix); printf" %d  %s\n",ix,$ix}}}'
+}
+
+zcd() {
+	if [ $# -ne 0 ]; then
+		if [ "$(echo $1 | cut -c1)" == "+" ]; then
+		# zcd +N
+				stackDepth=$(echo $DIRSTACK | awk -F':' '{print NF}')
+				dstIndex=$(echo $1 | cut -c2-)
+			# make sure destination is within dirstack
+				###[ $(echo $1 | cut -c2-) -gt $(echo ${DIRSTACK} | awk -F':' '{print NF}') ] && return
+			[ $dstIndex -eq 0 -o $dstIndex -gt $stackDepth ] && return
+			#
+			DEST=$( echo ${DIRSTACK} | cut -d: -f$dstIndex )
+			if [ $dstIndex -eq 1 ]; then
+				#
+				# cd DIRSTACK[1]
+				# DIRSTACK = DIRSTACK{2..end}		# DIRSTACK[1] removed
+				#
+				DIRSTACK="$( echo ${DIRSTACK} | cut -d: -f2- )"
+			else
+				#
+				# cd DIRSTACK[N]
+				# DIRSTACK = DIRSTACK{1..N-1} .. DIRSTACK{N+1..end}		# DIRSTACK[N] removed
+				#
+				let nxt=dstIndex+1
+				let prv=dstIndex-1
+				if [ $nxt -le $stackDepth ]; then
+					DIRSTACK="$( echo ${DIRSTACK} | cut -d: -f1-${prv} ):$( echo ${DIRSTACK} | cut -d: -f${nxt}- )"
+				else
+					DIRSTACK="$( echo ${DIRSTACK} | cut -d: -f1-${prv} )"
+				fi
+			fi
+##
+##				# awk script to extrat $dstIndex as DEST and return modified DIRSTACK
+##			res=$( echo ${DIRSTACK} | awk -F':' ' {
+##				for(ix=1;ix<=NF;ix++){
+##					if(ix=='$dstIndex'){ dest=$ix }
+##					else{
+##						if (remain=="") { remain=$ix } else {remain=remain":"$ix} }}}
+##				END { printf "DIRSTACK=%s;DEST=%s\n",remain,dest; }' )
+##			eval $res
+##
+				#-dbg- echo DEST=$DEST
+			\cd $DEST
+			return
+		fi
+	fi
+	\cd $*
+}
+
+zpd() {
+	if [ $# -eq 0 ]; then
+	# zpd
+		[ -z $DIRSTACK ] && echo "zpd: no other directory" && return
+		#
+		# cd DIRSTACK[1]
+		# DIRSTACK = $(pwd) .. DIRSTACK{2..end}		# DIRSTACK[1] replaced
+		#
+		DEST=$( echo ${DIRSTACK} | cut -d: -f1 )
+		if [ $(echo $DIRSTACK | awk -F':' '{print NF}') -eq 1 ]; then
+			DIRSTACK="$(pwd)"
+		else
+			DIRSTACK="$(pwd):$( echo ${DIRSTACK} | cut -d: -f2- )"
+		fi
+		\cd $DEST
+	else
+		if [ "$(echo $1 | cut -c1)" == "+" ]; then
+		# zpd +N
+				stackDepth=$(echo $DIRSTACK | awk -F':' '{print NF}')
+				dstIndex=$(echo $1 | cut -c2-)
+			# make sure destination is within dirstack
+				###[ $(echo $1 | cut -c2-) -gt $(echo ${DIRSTACK} | awk -F':' '{print NF}') ] && return
+			[ $dstIndex -eq 0 -o $dstIndex -gt $stackDepth ] && return
+			#
+			DEST=$( echo ${DIRSTACK} | cut -d: -f$dstIndex )
+			if [ $dstIndex -eq 1 ]; then
+				#
+				# cd DIRSTACK[1]
+				# DIRSTACK = DIRSTACK{2..end} .. $(pwd)
+				#
+				DIRSTACK="$( echo ${DIRSTACK} | cut -d: -f2- ):$(pwd)"
+			else
+				#
+				# cd DIRSTACK[N]
+				# DIRSTACK = DIRSTACK{N+1..end} .. $(pwd) .. DIRSTACK{1..N-1}
+				#
+				let nxt=dstIndex+1
+				let prv=dstIndex-1
+				if [ $nxt -le $stackDepth ]; then
+					DIRSTACK="$( echo ${DIRSTACK} | cut -d: -f${nxt}- ):$(pwd):$( echo ${DIRSTACK} | cut -d: -f1-${prv} )"
+				else
+					DIRSTACK="$(pwd):$( echo ${DIRSTACK} | cut -d: -f1-${prv} )"
+				fi
+			fi
+			\cd $DEST
+		else
+		# zpd {dest-dir}
+			#
+			# cd $1
+			# DIRSTACK = $(pwd) .. DIRSTACK		# DIRSTACK[1] added
+			#
+			[ -z $DIRSTACK ] && DIRSTACK="$(pwd)" || DIRSTACK="$(pwd):${DIRSTACK}"
+			\cd $1
+		fi
+	fi
+}
+
+zpo() {
+	if [ $# -eq 0 ]; then
+	# zpo
+		[ -z $DIRSTACK ] && echo "zpo: directory stack empty" && return
+		#
+		# cd DIRSTACK[1]
+		# DIRSTACK = DIRSTACK{2..end}		# DIRSTACK[1] removed
+		#
+		DEST=$( echo ${DIRSTACK} | cut -d: -f1 )
+		DIRSTACK="$( echo ${DIRSTACK} | cut -d: -f2- )"
+			#-dbg- echo DIRSTACK=$DIRSTACK
+		\cd $DEST
+	else
+		if [ "$(echo $1 | cut -c1)" == "+" ]; then
+		# zpo +N
+				stackDepth=$(echo $DIRSTACK | awk -F':' '{print NF}')
+				dstIndex=$(echo $1 | cut -c2-)
+			# make sure destination is within dirstack
+				###[ $(echo $1 | cut -c2-) -gt $(echo ${DIRSTACK} | awk -F':' '{print NF}') ] && return
+			[ $dstIndex -eq 0 -o $dstIndex -gt $stackDepth ] && return
+			#
+			if [ $dstIndex -eq 1 ]; then
+				#
+				# DIRSTACK = DIRSTACK{2..end}		# DIRSTACK[1] removed
+				#
+				DIRSTACK="$( echo ${DIRSTACK} | cut -d: -f2- )"
+			else
+				#
+				# DIRSTACK = DIRSTACK{1..N-1} .. DIRSTACK{N+1..end}		# DIRSTACK[N] removed
+				#
+				let nxt=dstIndex+1
+				let prv=dstIndex-1
+				if [ $nxt -le $stackDepth ]; then
+					DIRSTACK="$( echo ${DIRSTACK} | cut -d: -f1-${prv} ):$( echo ${DIRSTACK} | cut -d: -f${nxt}- )"
+				else
+					DIRSTACK="$( echo ${DIRSTACK} | cut -d: -f1-${prv} )"
+				fi
+			fi
+		fi
+	fi
+}
+
+#
+alias dirs=zdirs
+alias pd=zpd
+alias po=zpo
+alias cd=zcd
+#
+alias pushd=zpd
+alias popd=zpo
+
