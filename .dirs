@@ -12,11 +12,12 @@ zdirs() {
 	# zdirs -c : clear directory stack
 	[ $# -ne 0 -a "X$1" = "X-c" ] && DIRSTACK= && return
 	[ $# -ne 0 -a "X$1" = "X-p" ] && echo DIRSTACK=$DIRSTACK && return
+	[ $# -ne 0 -a "X$1" = "X-l" ] && HOMEDIR=${HOME} || HOMEDIR="~"
 	# zdirs : show directory stack
 		#-dbg- echo DIRSTACK=$DIRSTACK
-	echo ' 0 ' $(pwd | sed -e "s|$HOME|~|")
+	echo ' 0 ' $(pwd | sed -e "s|$HOME|$HOMEDIR|")
 		# does $HOME substitution
-	echo ${DIRSTACK} | awk -F':' '{for(ix=1;ix<=NF;ix++){if($ix!=""){gsub("'$HOME'","~",$ix); printf" %d  %s\n",ix,$ix}}}'
+	echo ${DIRSTACK} | awk -F':' '{for(ix=1;ix<=NF;ix++){if($ix!=""){gsub("'$HOME'","'$HOMEDIR'",$ix); printf" %d  %s\n",ix,$ix}}}'
 }
 
 zcd() {
