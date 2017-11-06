@@ -5,6 +5,7 @@
 #	revision:
 #			2017-10-31	initial working version
 #			2017-11-03	github version
+#			2017-11-06	enhanced error handling
 #
 
 zdirs() {
@@ -29,6 +30,9 @@ zcd() {
 			[ $dstIndex -eq 0 -o $dstIndex -gt $stackDepth ] && return
 			#
 			DEST=$( echo ${DIRSTACK} | cut -d: -f$dstIndex )
+			# sanity check
+			[ ! -d $DEST ] && echo "zpd: $DEST: No such directory" && return
+			#
 			if [ $dstIndex -eq 1 ]; then
 				#
 				# cd DIRSTACK[1]
@@ -75,6 +79,9 @@ zpd() {
 		# DIRSTACK = $(pwd) .. DIRSTACK{2..end}		# DIRSTACK[1] replaced
 		#
 		DEST=$( echo ${DIRSTACK} | cut -d: -f1 )
+		# sanity check
+		[ ! -d $DEST ] && echo "zpd: $DEST: No such directory" && return
+		#
 		if [ $(echo $DIRSTACK | awk -F':' '{print NF}') -eq 1 ]; then
 			DIRSTACK="$(pwd)"
 		else
@@ -91,6 +98,9 @@ zpd() {
 			[ $dstIndex -eq 0 -o $dstIndex -gt $stackDepth ] && return
 			#
 			DEST=$( echo ${DIRSTACK} | cut -d: -f$dstIndex )
+			# sanity check
+			[ ! -d $DEST ] && echo "zpd: $DEST: No such directory" && return
+			#
 			if [ $dstIndex -eq 1 ]; then
 				#
 				# cd DIRSTACK[1]
@@ -113,6 +123,8 @@ zpd() {
 			\cd $DEST
 		else
 		# zpd {dest-dir}
+			# sanity check
+			[ ! -d $1 ] && echo "zpd: $1: No such directory" && return
 			#
 			# cd $1
 			# DIRSTACK = $(pwd) .. DIRSTACK		# DIRSTACK[1] added
@@ -132,6 +144,9 @@ zpo() {
 		# DIRSTACK = DIRSTACK{2..end}		# DIRSTACK[1] removed
 		#
 		DEST=$( echo ${DIRSTACK} | cut -d: -f1 )
+		# sanity check
+		[ ! -d $DEST ] && echo "zpd: $DEST: No such directory" && return
+		#
 		DIRSTACK="$( echo ${DIRSTACK} | cut -d: -f2- )"
 			#-dbg- echo DIRSTACK=$DIRSTACK
 		\cd $DEST
