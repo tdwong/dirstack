@@ -6,6 +6,7 @@
 #			2017-10-31	initial working version
 #			2017-11-03	github version
 #			2017-11-06	enhanced error handling
+#			2017-11-13	enabled pushd and popd to print dirstack to stdout
 #
 
 zdirs() {
@@ -89,6 +90,8 @@ zpd() {
 			DIRSTACK="$(pwd):$( echo ${DIRSTACK} | cut -d: -f2- )"
 		fi
 		\cd $DEST
+		#
+		echo $(pwd) $(echo $DIRSTACK | sed "s/:/ /")
 	else
 		if [ "$(echo $1 | cut -c1)" == "+" ]; then
 		# zpd +N
@@ -122,6 +125,8 @@ zpd() {
 				fi
 			fi
 			\cd $DEST
+			#
+			echo $(pwd) $(echo $DIRSTACK | sed "s/:/ /")
 		else
 		# zpd {dest-dir}
 			# sanity check
@@ -132,6 +137,8 @@ zpd() {
 			#
 			[ -z $DIRSTACK ] && DIRSTACK="$(pwd)" || DIRSTACK="$(pwd):${DIRSTACK}"
 			\cd $1
+			#
+			echo $(pwd) $(echo $DIRSTACK | sed "s/:/ /")
 		fi
 	fi
 }
@@ -151,6 +158,8 @@ zpo() {
 		DIRSTACK="$( echo ${DIRSTACK} | cut -d: -f2- )"
 			#-dbg- echo DIRSTACK=$DIRSTACK
 		\cd $DEST
+		#
+		echo $(pwd) $(echo $DIRSTACK | sed "s/:/ /")
 	else
 		if [ "$(echo $1 | cut -c1)" == "+" ]; then
 		# zpo +N
@@ -176,15 +185,15 @@ zpo() {
 				else
 					DIRSTACK="$( echo ${DIRSTACK} | cut -d: -f1-${prv} )"
 				fi
-			fi
+			fi	# [ $dstIndex -eq 1 ];
 		fi
-	fi
+	fi	# [ $# -eq 0 ];
 }
 
 #
 alias dirs=zdirs
-alias pd=zpd
-alias po=zpo
+alias pd='zpd 2>&1 >/dev/null'
+alias po='zpo 2>&1 >/dev/null'
 alias cd=zcd
 #
 alias pushd=zpd
