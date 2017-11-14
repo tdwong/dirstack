@@ -29,7 +29,8 @@ zcd() {
 				dstIndex=$(echo $1 | cut -c2-)
 			# make sure destination is within dirstack
 				###[ $(echo $1 | cut -c2-) -gt $(echo ${DIRSTACK} | awk -F':' '{print NF}') ] && return
-			[ $dstIndex -eq 0 -o $dstIndex -gt $stackDepth ] && return
+			[ $dstIndex -eq 0 ] && return		# do nothing
+			[ $dstIndex -gt $stackDepth ] && (>&2 echo "zcd: $1: directory stack index out of range") && return
 			#
 			DEST=$( echo ${DIRSTACK} | cut -d: -f$dstIndex )
 			# sanity check
@@ -99,7 +100,8 @@ zpd() {
 				dstIndex=$(echo $1 | cut -c2-)
 			# make sure destination is within dirstack
 				###[ $(echo $1 | cut -c2-) -gt $(echo ${DIRSTACK} | awk -F':' '{print NF}') ] && return
-			[ $dstIndex -eq 0 -o $dstIndex -gt $stackDepth ] && return
+			[ $dstIndex -eq 0 ] && return		# do nothing
+			[ $dstIndex -gt $stackDepth ] && (>&2 echo "zpd: $1: directory stack index out of range") && return
 			#
 			DEST=$( echo ${DIRSTACK} | cut -d: -f$dstIndex )
 			# sanity check
@@ -167,7 +169,8 @@ zpo() {
 				dstIndex=$(echo $1 | cut -c2-)
 			# make sure destination is within dirstack
 				###[ $(echo $1 | cut -c2-) -gt $(echo ${DIRSTACK} | awk -F':' '{print NF}') ] && return
-			[ $dstIndex -eq 0 -o $dstIndex -gt $stackDepth ] && return
+			[ $dstIndex -eq 0 ] && zpo && return
+			[ $dstIndex -gt $stackDepth ] && (>&2 echo "zpo: $1: directory stack index out of range") && return
 			#
 			if [ $dstIndex -eq 1 ]; then
 				#
