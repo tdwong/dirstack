@@ -34,7 +34,7 @@ zcd() {
 			#
 			DEST=$( echo ${DIRSTACK} | cut -d: -f$dstIndex )
 			# sanity check
-			[ ! -d $DEST ] && echo "zpd: $DEST: No such directory" && return
+			[ ! -d $DEST ] && (>&2 echo "zpd: $DEST: No such directory") && return
 			#
 			if [ $dstIndex -eq 1 ]; then
 				#
@@ -76,14 +76,14 @@ zcd() {
 zpd() {
 	if [ $# -eq 0 ]; then
 	# zpd
-		[ -z $DIRSTACK ] && echo "zpd: no other directory" && return
+		[ -z $DIRSTACK ] && (>&2 echo "zpd: no other directory") && return
 		#
 		# cd DIRSTACK[1]
 		# DIRSTACK = $(pwd) .. DIRSTACK{2..end}		# DIRSTACK[1] replaced
 		#
 		DEST=$( echo ${DIRSTACK} | cut -d: -f1 )
 		# sanity check
-		[ ! -d $DEST ] && echo "zpd: $DEST: No such directory" && return
+		[ ! -d $DEST ] && (>&2 echo "zpd: $DEST: No such directory") && return
 		#
 		if [ $(echo $DIRSTACK | awk -F':' '{print NF}') -eq 1 ]; then
 			DIRSTACK="$(pwd)"
@@ -105,7 +105,7 @@ zpd() {
 			#
 			DEST=$( echo ${DIRSTACK} | cut -d: -f$dstIndex )
 			# sanity check
-			[ ! -d $DEST ] && echo "zpd: $DEST: No such directory" && return
+			[ ! -d $DEST ] && (>&2 echo "zpd: $DEST: No such directory") && return
 			#
 			if [ $dstIndex -eq 1 ]; then
 				#
@@ -132,7 +132,7 @@ zpd() {
 		else
 		# zpd {dest-dir}
 			# sanity check
-			[ ! -d $1 ] && echo "zpd: $1: No such directory" && return
+			[ ! -d $1 ] && (>&2 echo "zpd: $1: No such directory") && return
 			#
 			# cd $1
 			# DIRSTACK = $(pwd) .. DIRSTACK		# DIRSTACK[1] added
@@ -148,14 +148,14 @@ zpd() {
 zpo() {
 	if [ $# -eq 0 ]; then
 	# zpo
-		[ -z $DIRSTACK ] && echo "zpo: directory stack empty" && return
+		[ -z $DIRSTACK ] && (>&2 echo "zpo: directory stack empty") && return
 		#
 		# cd DIRSTACK[1]
 		# DIRSTACK = DIRSTACK{2..end}		# DIRSTACK[1] removed
 		#
 		DEST=$( echo ${DIRSTACK} | cut -d: -f1 )
 		# sanity check
-		[ ! -d $DEST ] && echo "zpd: $DEST: No such directory" && return
+		[ ! -d $DEST ] && (>&2 echo "zpd: $DEST: No such directory") && return
 		#
 		DIRSTACK="$( echo ${DIRSTACK} | cut -d: -f2- )"
 			#-dbg- echo DIRSTACK=$DIRSTACK
