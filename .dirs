@@ -173,10 +173,15 @@ zpo() {
 			[ $dstIndex -gt $stackDepth ] && (>&2 echo "zpo: $1: directory stack index out of range") && return
 			#
 			if [ $dstIndex -eq 1 ]; then
-				#
-				# DIRSTACK = DIRSTACK{2..end}		# DIRSTACK[1] removed
-				#
-				DIRSTACK="$( echo ${DIRSTACK} | cut -d: -f2- )"
+				if [ $stackDepth -eq 1 ]; then
+					# remove the only element in directory stack
+					DIRSTACK=
+				else
+					#
+					# DIRSTACK = DIRSTACK{2..end}		# DIRSTACK[1] removed
+					#
+					DIRSTACK="$( echo ${DIRSTACK} | cut -d: -f2- )"
+				fi
 			else
 				#
 				# DIRSTACK = DIRSTACK{1..N-1} .. DIRSTACK{N+1..end}		# DIRSTACK[N] removed
