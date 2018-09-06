@@ -14,6 +14,8 @@ zdirs() {
 	[ $# -ne 0 -a "X$1" = "X-c" ] && DIRSTACK= && return
 	[ $# -ne 0 -a "X$1" = "X-p" ] && echo DIRSTACK=$DIRSTACK && return
 	[ $# -ne 0 -a "X$1" = "X-l" ] && HOMEDIR=${HOME} || HOMEDIR="~"
+	# 2018-09-05 fixed incorrect HOMEDIR
+	[ X"$HOME" = "X/" ] && HOMEDIR=$HOME
 	# zdirs : show directory stack
 		#-dbg- echo DIRSTACK=$DIRSTACK
 	echo ' 0 ' $(pwd | sed -e "s|$HOME|$HOMEDIR|")
