@@ -8,7 +8,11 @@
 #			2017-11-06	enhanced error handling
 #			2017-11-13	enabled pushd and popd to print dirstack to stdout
 #			2018-10-12	added -h,-s,-S,-a options to zdirs
+#			2018-10-12	DIRSTACK cache location can be set via environment variable
 #
+
+# where DIRSTACK cache is
+DOT_ZDIRSTACK=${DOT_ZDIRSTACK:=$HOME/.zdirstack}
 
 zdirs() {
 	# zdirs -c : clear directory stack
@@ -17,19 +21,20 @@ zdirs() {
 		  echo "       -c: clear directory stack" ; \
 		  echo "       -p: print directory stack" ; \
 		  echo "       -l: list directory stack"  ; \
-		  echo "       -s: save directory stack to $HOME/.zdirstack" ; \
-		  echo "       -S: append directory stack to $HOME/.zdirstack" ; \
-		  echo "       -a: load directory stack from $HOME/.zdirstack" ; \
+		  echo "       -s: save directory stack to ${DOT_ZDIRSTACK}" ; \
+		  echo "       -S: append directory stack to ${DOT_ZDIRSTACK}" ; \
+		  echo "       -a: load directory stack from ${DOT_ZDIRSTACK}" ; \
+		  echo " set \$DOT_ZDIRSTACK for alternative directory stack cache location" ; \
 		} && return
 	[ $# -ne 0 -a "X$1" = "X-c" ] && DIRSTACK= && return
 	[ $# -ne 0 -a "X$1" = "X-p" ] && echo DIRSTACK=$DIRSTACK && return
-	[ $# -ne 0 -a "X$1" = "X-s" ] && echo $DIRSTACK >$HOME/.zdirstack && return
+	[ $# -ne 0 -a "X$1" = "X-s" ] && echo $DIRSTACK >${DOT_ZDIRSTACK} && return
 	[ $# -ne 0 -a "X$1" = "X-S" ] && \
-		{ local curstack=$(cat $HOME/.zdirstack) ; \
+		{ local curstack=$(cat ${DOT_ZDIRSTACK}) ; \
 		  [ "X$DIRSTACK" != "X" ] && \
-		  echo "${curstack}:${DIRSTACK}" >$HOME/.zdirstack ; \
+		  echo "${curstack}:${DIRSTACK}" >${DOT_ZDIRSTACK} ; \
 		} && return
-	[ $# -ne 0 -a "X$1" = "X-a" ] && DIRSTACK=$(cat $HOME/.zdirstack) && return
+	[ $# -ne 0 -a "X$1" = "X-a" ] && DIRSTACK=$(cat ${DOT_ZDIRSTACK}) && return
 	[ $# -ne 0 -a "X$1" = "X-l" ] && HOMEDIR=${HOME} || HOMEDIR="~"
 	# 2018-09-05 fixed incorrect HOMEDIR
 	[ X"$HOME" = "X/" ] && HOMEDIR=$HOME
