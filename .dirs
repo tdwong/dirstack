@@ -8,6 +8,10 @@
 #			2017-11-06	enhanced error handling
 #			2017-11-13	enabled pushd and popd to print dirstack to stdout
 #			2018-10-12	added -h,-s,-S,-a options to zdirs
+#			2018-10-12	allowed -u to unset alias(-es)
+#
+#	to-do:
+#			- rename DIRSTACK to ZDIRSTACK (to avoid conflict with bash built-in variable)
 #
 
 zdirs() {
@@ -219,12 +223,21 @@ zpo() {
 	fi	# [ $# -eq 0 ];
 }
 
+
 #
-alias dirs=zdirs
-alias pd='zpd 2>&1 >/dev/null'
-alias po='zpo 2>&1 >/dev/null'
-alias cd=zcd
+if [ $# -gt 0 -a X"$1" = "X-u" ]; then
+	echo unset aliases
+	for z in dirs pd po cd pushd popd
+	do
+		[ "X$(type -t $z)" = "Xalias" ] && unalias $z
+	done
+else
+	alias dirs=zdirs
+	alias pd='zpd 2>&1 >/dev/null'
+	alias po='zpo 2>&1 >/dev/null'
+	alias cd=zcd
 #
-alias pushd=zpd
-alias popd=zpo
+	alias pushd=zpd
+	alias popd=zpo
+fi
 
