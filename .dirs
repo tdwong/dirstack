@@ -9,6 +9,7 @@
 #			2017-11-13	enabled pushd and popd to print dirstack to stdout
 #			2018-10-12	added -h,-s,-S,-a options to zdirs
 #			2018-10-12	DIRSTACK cache location can be set via environment variable
+#			2019-01-23	fixed zpo when DIRSTACK has only one entry
 #
 
 # where DIRSTACK cache is
@@ -183,8 +184,14 @@ zpo() {
 		# sanity check
 		[ ! -d $DEST ] && (>&2 echo "zpd: $DEST: No such directory") && return
 		#
-		DIRSTACK="$( echo ${DIRSTACK} | cut -d: -f2- )"
-			#-dbg- echo DIRSTACK=$DIRSTACK
+		stackDepth=$(echo $DIRSTACK | awk -F':' '{print NF}')
+		if [ $stackDepth -le 1 ]; then
+			# remove the only element in directory stack
+			DIRSTACK=
+		else
+			DIRSTACK="$( echo ${DIRSTACK} | cut -d: -f2- )"
+		fi
+		#-dbg- echo DIRSTACK=$DIRSTACK
 		\cd $DEST
 		#
 		echo $(pwd) $(echo $DIRSTACK | sed "s/:/ /")
