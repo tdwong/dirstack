@@ -18,7 +18,7 @@ DOT_ZDIRSTACK=${DOT_ZDIRSTACK:=$HOME/.zdirstack}
 zdirs() {
 	# zdirs -c : clear directory stack
 	[ $# -ne 0 -a "X$1" = "X-h" ] && \
-		{ echo "usage: dirs [-c|-p|-l|-s|-S|-a]"  ; \
+		{ echo "usage: zdirs [-c|-p|-l|-s|-S|-a]"  ; \
 		  echo "       -c: clear directory stack" ; \
 		  echo "       -p: print directory stack" ; \
 		  echo "       -l: list directory stack"  ; \
@@ -59,7 +59,7 @@ zcd() {
 			#
 			DEST=$( echo ${DIRSTACK} | cut -d: -f$dstIndex )
 			# sanity check
-			[ ! -d $DEST ] && (>&2 echo "zpd: $DEST: No such directory") && return
+			[ ! -d $DEST ] && (>&2 echo "zcd: $DEST: No such directory") && return
 			#
 			if [ $dstIndex -eq 1 ]; then
 				#
@@ -182,7 +182,7 @@ zpo() {
 		#
 		DEST=$( echo ${DIRSTACK} | cut -d: -f1 )
 		# sanity check
-		[ ! -d $DEST ] && (>&2 echo "zpd: $DEST: No such directory") && return
+		[ ! -d $DEST ] && (>&2 echo "zpo: $DEST: No such directory") && return
 		#
 		stackDepth=$(echo $DIRSTACK | awk -F':' '{print NF}')
 		if [ $stackDepth -le 1 ]; then
