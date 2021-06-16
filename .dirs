@@ -20,6 +20,7 @@ zdirs() {
 	[ $# -ne 0 -a "X$1" = "X-h" ] && \
 		{ echo "usage: zdirs [-c|-p|-l|-s|-S|-a]"  ; \
 		  echo "       -c: clear directory stack" ; \
+		  echo "       -C: clear invalid entries in directory stack" ; \
 		  echo "       -p: print directory stack" ; \
 		  echo "       -l: list directory stack"  ; \
 		  echo "       -s: save directory stack to ${DOT_ZDIRSTACK}" ; \
@@ -28,6 +29,17 @@ zdirs() {
 		  echo " set \$DOT_ZDIRSTACK for alternative directory stack cache location" ; \
 		} && return
 	[ $# -ne 0 -a "X$1" = "X-c" ] && DIRSTACK= && return
+	[ $# -ne 0 -a "X$1" = "X-C" ] && \
+		{ local nstack= ; \
+		  for z in $( echo ${DIRSTACK} | sed -e 's/:/ /'g ) ; \
+		  do \
+			z1=$(echo $z|sed -e "s|~|$HOME|") ; \
+			if [ -d $z1 ]; then \
+				[ -z $nstack ] && nstack=$z || nstack="$nstack:$z" ; \
+			fi ; \
+		  done ; \
+		  DIRSTACK=$nstack ; \
+		} && return
 	[ $# -ne 0 -a "X$1" = "X-p" ] && echo DIRSTACK=$DIRSTACK && return
 	[ $# -ne 0 -a "X$1" = "X-s" ] && echo $DIRSTACK >${DOT_ZDIRSTACK} && return
 	[ $# -ne 0 -a "X$1" = "X-S" ] && \
@@ -37,6 +49,7 @@ zdirs() {
 		} && return
 	[ $# -ne 0 -a "X$1" = "X-a" ] && DIRSTACK=$(cat ${DOT_ZDIRSTACK}) && return
 	[ $# -ne 0 -a "X$1" = "X-l" ] && HOMEDIR=${HOME} || HOMEDIR="~"
+#
 	# 2018-09-05 fixed incorrect HOMEDIR
 	[ X"$HOME" = "X/" ] && HOMEDIR=$HOME
 	# zdirs : show directory stack
