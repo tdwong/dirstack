@@ -3,6 +3,7 @@
 #   usage: tree [directory]
 #
 #   note: tested on aosp-toybox (i.e. adb shell) and ubuntu
+#   note: only tree() is available on busybox (tested on CLG)
 #
 #	author:   twong@magicleap.com
 #	created:  2023-11-16
@@ -10,14 +11,28 @@
 #			2023-11-17	evolve experimental zztree to working ztree & tree
 #			2023-11-22  minor update
 #			2024-05-06  upload to GitHub
+#			2024-05-06  tree() for busybox
 #
 
-function tree()
-{
+# check if busybox or toybox (xargs is needed for busybox)
+test -h $(which ls) && box=$( \ls -l $(which ls) | cut -d\> -f2 | xargs )
+echo box=$box
+
+# busybox specific
+# 1. mock readlink if needed
+# 2. extra find option
+if [ "X$box" = "Xbusybox" ]; then
+	if ! type readlink >/dev/null ; then readlink() { while [ $# -gt 1 ]; do shift; done; echo $1; }; fi
+	findOpts=-follow
+fi
+
+tree() {
 	local usage="tree [directory]"
+	local opwd=$(pwd)
 #
 #https://coderwall.com/p/qw2eoq/bash-script-to-generate-tree-structure-of-a-directory
 	[ $# -eq 0 ] && z=$(pwd) || z=$(readlink -f $1)
+
 	[ "X$z" == "X." ] && z=$(pwd)
 #
 # Note: use '~' to avoid confusing sed (as '/' is used in path)
@@ -33,7 +48,7 @@ function tree()
 #	  |__L1file
 #
 ##- two dashes and one space before name
-	find $z -print 2>/dev/null | sed -e "s~$z~\.~g; s~[^/]*\/~|__ ~g; s/__ |/   |/g; s/^|/   |/; s~^\.$~[$z]~"
+	find $z $findOpts -print 2>/dev/null | sed -e "s~$z~\.~g; s~[^/]*\/~|__ ~g; s/__ |/   |/g; s/^|/   |/; s~^\.$~[$z]~"
 # tree /data/rootdir
 #	[/data/rootdir]
 #	   |__ L2dir
@@ -141,8 +156,9 @@ function tree()
 	#- 	fi
 	#- }
 
-function ztree()
-{
+# ztree() is NOT available in busybox
+[ "X$box" != "Xbusybox" ] && \
+ztree() {
 # __global utf-8 variables set once called__
 	__esc='\033[0m'       ;
 	__dash='\xe2\x94\x80' ;
