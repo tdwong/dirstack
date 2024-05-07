@@ -1,0 +1,166 @@
+# tree command for aosp-toybox
+#
+#   usage: tree [directory]
+#
+#   note: tested on aosp-toybox (i.e. adb shell) and ubuntu
+#
+#	author:   twong@magicleap.com
+#	created:  2023-11-16
+#	revision:
+#			2023-11-17	evolve experimental zztree to working ztree & tree
+#			2023-11-22  minor update
+#			2024-05-06  upload to GitHub
+#
+
+function tree()
+{
+	local usage="tree [directory]"
+#
+#https://coderwall.com/p/qw2eoq/bash-script-to-generate-tree-structure-of-a-directory
+	[ $# -eq 0 ] && z=$(pwd) || z=$(readlink -f $1)
+	[ "X$z" == "X." ] && z=$(pwd)
+#
+# Note: use '~' to avoid confusing sed (as '/' is used in path)
+#
+##- two dashes and no space before name
+#	find $z -print 2>/dev/null | sed -e "s~$z~\.~g; s~[^/]*\/~|__~g; s/__|/	 |/g; s/^|/	 |/; s~^\.$~[$z]~"
+#	# tree /data/rootdir
+#	[/data/rootdir]
+#	  |__L2dir
+#	  |  |__L2file
+#	  |  |__L3dir
+#	  |  |  |__L3file
+#	  |__L1file
+#
+##- two dashes and one space before name
+	find $z -print 2>/dev/null | sed -e "s~$z~\.~g; s~[^/]*\/~|__ ~g; s/__ |/   |/g; s/^|/   |/; s~^\.$~[$z]~"
+# tree /data/rootdir
+#	[/data/rootdir]
+#	   |__ L2dir
+#	   |   |__ L2file
+#	   |   |__ L3dir
+#	   |   |   |__ L3file
+#	   |__ L1file
+
+# ubuntu
+#	$ mkdir -p rootdir/L2dir/L3dir
+#	$ touch rootdir/L1file rootdir/L2dir/L2file rootdir/L2dir/L3dir/L3file
+#	$ tree rootdir/
+#	rootdir/
+#	├── L1file
+#	└── L2dir
+#	    ├── L2file
+#	    └── L3dir
+#	        └── L3file
+#	
+#	2 directories, 3 files
+
+# ubuntu
+#	- use -depth
+#	- echo target directory as first time
+#	- delete last time from find output
+#
+#	[ $# -eq 0 ] && z=$(pwd) || z=$(readlink -f $1)
+#	[ "X$z" == "X." ] && z=$(pwd)
+#	echo "[$z]"
+#	find $z -depth -print 2>/dev/null | sed -e '$d' | sed -e "s~$z~\.~g; s~[^/]*\/~|__ ~g; s/__ |/   |/g; s/^|/   |/;"
+#
+
+# 2023-11-16
+# 2023-11-22
+#
+#	esc='\033[0m'       ;
+#	dash='\xe2\x94\x80' ;
+#	eL='\xe2\x94\x94'   ;
+#	dT='\xe2\x94\x9c'   ;
+#	nL='\x0a'           ;
+#
+#	$ echo -e dir $nL $esc$eL$dash file1 $nL $esc$eL$dash file2 $nL
+#	dir
+#	└─ file1
+#	└─ file2
+#	$ echo -e dir $nL $esc$dT$dash file1 $nL $esc$eL$dash file2 $nL
+#	dir
+#	 ├─ file1
+#	 └─ file2
+#
+}
+
+	#- zztree()	#// experimental -> usable (2023-11-17)
+	#- {
+	#- # __global utf-8 variables set once called__
+	#- 	__esc='\033[0m'       ; 
+	#- 	__dash='\xe2\x94\x80' ; 
+	#- 	__eL='\xe2\x94\x94'   ; 
+	#- 	__dT='\xe2\x94\x9c'   ;
+	#- 	__nL='\x0a'           ; 
+	#- #
+	#- 	local usage="tree [directory]"
+	#- 	#
+	#- 	[ $# -eq 0 ] && z=$(pwd) || z=$(readlink -f $1)
+	#- 	[ "X$z" == "X." ] && z=$(pwd)
+	#- 	#
+	#- 	local esc='\033[0m'       ; ## echo es=$esc | xxd ;
+	#- 	local dash='\xe2\x94\x80' ; ## echo da=$dash| xxd ;
+	#- 	local eL='\xe2\x94\x94'	  ; ## echo eL=$eL  | xxd ;
+	#- 	local dT='\xe2\x94\x9c'   ; ## echo dT=$dT  | xxd ;
+	#- 	local nL='\x0a'		      ; ## echo nL=$nL  | xxd ;
+
+	#- 	# chosen solution for now (2023-11-17)
+	#- 	local sol=${TOOL:=sed}
+	#- 	unset TOOL
+
+	#- # command works on bash but need extra touch-up for aosp-toybox
+	#- #	find $z -print 2>/dev/null | \
+	#- #	sed -e "s~$z~\.~g; s~[^/]*\/~|__ ~g;  s/__ |/   |/g; s~^\.$~[$z]~" | \
+	#- #	sed -e "s/^/$esc/;  s~|   ~    ~; s~|__~ $eL$dash~; s/ | /  |/g;"
+
+	#- 	## sed solution:
+	#- 	if [ "X$sol" = "Xsed" ]; then
+	#- 		find $z -print 2>/dev/null | \
+	#- 		sed -e "s~$z~\.~g; s~[^/]*\/~|__ ~g;  s/__ |/   |/g; s~^\.$~[$z]~" | \
+	#- 		sed -e "s/^/$(echo -e $esc)/; s~|__~$(echo -e $eL$dash)~; 2,\$s/^/ /; \$s/| /  /g; ## s~|   ~    ~; s/ | /  |/g; ## ;"
+
+	#- 	## awk solution:
+	#- 	elif [ "X$sol" = "Xawk" ]; then
+	#- 		find $z -print 2>/dev/null | \
+	#- 		sed -e "s~$z~\.~g; s~[^/]*\/~|__ ~g;  s/__ |/   |/g; s~^\.$~[$z]~" | \
+	#- 		awk '{ gsub(/\|__/,"'$eL$dash'"); print "'$esc'"$0; }' |\
+	#- 		sed -e '1n; s/^/ /; $s/| /  /g;'
+	#- 	##	sed -e "s~|   ~    ~; s/ | /  |/g;"
+
+	#- 	## test cases
+	#- 	else
+	#- ##	# sample test case #1
+	#- 	echo -n '[echo -e]: '	; echo -e dir $__nL $__esc$__eL$__dash file1 $__nL $__esc$__eL$__dash file2 $__nL
+	#- 	# sample test case #2
+	#- 	echo -n '[awk] solution: '	; echo dir1/dirb/fileZ | awk '{ gsub(/\//,"'$__eL$__dash'"); print "'$__esc'"$0; }'
+	#- 	# sample test case #3
+	#- 	echo -n '[sed] solution: '	; echo dir1/dirb/fileZ | sed -e 's/\//'$(echo -e $__eL$__dash)'/g; s/^/'$(echo -e $__esc)'/'
+	#- ##
+	#- 	fi
+	#- }
+
+function ztree()
+{
+# __global utf-8 variables set once called__
+	__esc='\033[0m'       ;
+	__dash='\xe2\x94\x80' ;
+	__vbar='\xe2\x94\x82' ;
+	__eL='\xe2\x94\x94'   ;
+	__dT='\xe2\x94\x9c'   ;
+	__nL='\x0a'           ;
+#
+	local usage="ztree [directory]"
+	#
+	[ $# -eq 0 ] && z=$(pwd) || z=$(readlink -f $1)
+	[ "X$z" == "X." ] && z=$(pwd)
+	#
+	# trim trailing slash (/)
+	local targetDir=$( echo $z | sed -e 's?//*$??' )
+
+	##
+##	find ${targetDir} | sed -e "s~${targetDir}~.~" | awk '{ c[NR]=gsub("[^/]*/","|__",$0); gsub("__\\|","    |",$0); LN[NR]=$0; if (NR > 1) { if (c[NR]>=c[NR-1]){gsub("\\|__","|_T_",LN[NR-1])}; print "    "LN[NR-1]; }; } END { print "    "LN[NR]; }' | sed -e 's/|_T_/'"$(echo -e $__dT$__dash$__dash)"'/' -e 's/|__/'"$(echo -e $__eL$__dash$__dash)"'/' -e '1s?.*?\['${targetDir}'\]?' -e 's/\|/'"$(echo -e $__vbar)"'/g'
+	find ${targetDir} | sed -e "s~${targetDir}~.~" | awk '{ c[NR]=gsub("[^/]*/","|__",$0); gsub("__\\|","    |",$0); LN[NR]=$0; if (NR > 1) { if (c[NR]>=c[NR-1]){gsub("\\|__","|_T_",LN[NR-1])}; print "    "LN[NR-1]; }; } END { print "    "LN[NR]; }' | sed -e 's/|_T_/'"$(echo -e $__dT$__dash$__dash)"" "'/' -e 's/|__/'"$(echo -e $__eL$__dash$__dash)"" "'/' -e '1s?.*?\['${targetDir}'\]?' -e 's/\|/'"$(echo -e $__vbar)"'/g'
+
+}
